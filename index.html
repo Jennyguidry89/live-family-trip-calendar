@@ -64,71 +64,71 @@
 
         async function loadCalendar() {
             const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTETf5k2la3dvSl0-bZZKsDram5o134CJ2WTph458fcmOpI5FZn7zP_wwTP3PlGng/pubhtml");
-            const text = await response.text();
-            const rows = text.split("\n").map(row => row.split(","));
-            const headers = rows[0];
-            const data = rows.slice(1).filter(row => row.length >= 7);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            const rows = [...doc.querySelectorAll("table tbody tr")];
+            const headers = rows.shift().querySelectorAll("td");
+            const data = rows.map(row => [...row.querySelectorAll("td")].map(cell => cell.innerText.trim()));
 
-            const eventsByDate = {};
+            const eventsByDate = new Map();
 
             for (const row of data) {
                 const [date, time, event, location, status, ticketRaw, notes] = row;
+                if (!date) continue;
                 const parsedDate = new Date(date);
                 parsedDate.setFullYear(2025);
-                const dateObj = new Date(date);
-                dateObj.setFullYear(2025);
-                const dateKey = dateObj.toLocaleDateString(undefined, {
+                const dateKey = parsedDate.toLocaleDateString(undefined, {
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                 });
 
-                const eventKey = event ? event.replace(/"/g, "").trim().toLowerCase() : "";
-
-                if (!eventsByDate[dateKey]) eventsByDate[dateKey] = [];
-                eventsByDate[dateKey].push({ fullDate: dateObj,
+                if (!eventsByDate.has(dateKey)) eventsByDate.set(dateKey, []);
+                eventsByDate.get(dateKey).push({
+                    fullDate: parsedDate,
                     time,
                     event,
                     location,
                     status,
                     notes,
                     maps_url: location ? `https://www.google.com/maps/search/${encodeURIComponent(location)}` : "",
-                    pdf_url: eventKey && pdfLinks[eventKey] ? pdfLinks[eventKey] : null
+                    pdf_url: event && pdfLinks[event.trim().toLowerCase()] ? pdfLinks[event.trim().toLowerCase()] : null
                 });
             }
 
             const container = document.getElementById("calendar");
             container.innerHTML = "";
 
-            Object.entries(eventsByDate)
-                  .sort((a, b) => new Date(a[1][0].fullDate) - new Date(b[1][0].fullDate))
-                  .forEach(([date, events]) => {
-                const section = document.createElement("div");
-                section.className = "day-section";
-                const header = document.createElement("h2");
-                header.textContent = date;
-                section.appendChild(header);
+            [...eventsByDate.entries()]
+                .sort((a, b) => a[1][0].fullDate - b[1][0].fullDate)
+                .forEach(([date, events]) => {
+                    const section = document.createElement("div");
+                    section.className = "day-section";
+                    const header = document.createElement("h2");
+                    header.textContent = date;
+                    section.appendChild(header);
 
-                const ul = document.createElement("ul");
-                eventsByDate[date].sort((a, b) => a.time.localeCompare(b.time)).forEach(event => {
-                    const li = document.createElement("li");
+                    const ul = document.createElement("ul");
+                    events.sort((a, b) => a.time.localeCompare(b.time)).forEach(event => {
+                        const li = document.createElement("li");
 
-                    li.innerHTML = `<strong>${event.time}</strong> — <em>${event.event}</em><br>
-                                    📍 <a href="${event.maps_url}" target="_blank">${event.location}</a><br>
-                                    ✅ Status: ${event.status}<br>
-                                    📝 ${event.notes || ""}`;
+                        li.innerHTML = `<strong>${event.time}</strong> — <em>${event.event}</em><br>
+                                        📍 <a href="${event.maps_url}" target="_blank">${event.location}</a><br>
+                                        ✅ Status: ${event.status}<br>
+                                        📝 ${event.notes || ""}`;
 
-                    if (event.pdf_url) {
-                        const btn = document.createElement("button");
-                        btn.className = "pdf-button";
-                        btn.textContent = "View PDF";
-                        btn.onclick = () => window.open(event.pdf_url, "_blank");
-                        li.appendChild(btn);
-                    }
+                        if (event.pdf_url) {
+                            const btn = document.createElement("button");
+                            btn.className = "pdf-button";
+                            btn.textContent = "View PDF";
+                            btn.onclick = () => window.open(event.pdf_url, "_blank");
+                            li.appendChild(btn);
+                        }
 
-                    ul.appendChild(li);
+                        ul.appendChild(li);
+                    });
+                    section.appendChild(ul);
+                    container.appendChild(section);
                 });
-                section.appendChild(ul);
-                container.appendChild(section);
-            });
         }
 
         window.onload = loadCalendar;
