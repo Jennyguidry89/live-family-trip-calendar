@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Live Family Trip Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2em;
+            max-width: 900px;
+            margin: auto;
+            background: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+        }
+        .day-section {
+            margin-bottom: 2em;
+            background: #fff;
+            padding: 1em;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            background: #0077cc;
+            color: white;
+            padding: 0.5em;
+            border-radius: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 1em;
+            background: #eef;
+            padding: 1em;
+            border-radius: 5px;
+        }
+        a {
+            color: #0077cc;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Family Trip Calendar</h1>
+    <div id="calendar">Loading...</div>
+    <script>
+        async function loadCalendar() {
+            const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTETf5k2la3dvSl0-bZZKsDram5o134CJ2WTph458fcmOpI5FZn7zP_wwTP3PlGng/pub?output=csv");
+            const text = await response.text();
+            const rows = text.split("\n").map(row => row.split(","));
+            const headers = rows[0];
+            const data = rows.slice(1).filter(row => row.length >= 7);
+
+            const eventsByDate = {};
+
+            for (const row of data) {
+                const [date, time, event, location, status, ticket, notes] = row;
+                const dateKey = new Date(date).toLocaleDateString(undefined, {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+                if (!eventsByDate[dateKey]) eventsByDate[dateKey] = [];
+                eventsByDate[dateKey].push({
+                    time,
+                    event,
+                    location,
+                    status,
+                    ticket,
+                    notes,
+                    maps_url: location ? `https://www.google.com/maps/search/${encodeURIComponent(location)}` : ""
+                });
+            }
+
+            const container = document.getElementById("calendar");
+            container.innerHTML = "";
+
+            Object.keys(eventsByDate).sort().forEach(date => {
+                const section = document.createElement("div");
+                section.className = "day-section";
+                const header = document.createElement("h2");
+                header.textContent = date;
+                section.appendChild(header);
+
+                const ul = document.createElement("ul");
+                eventsByDate[date].sort((a, b) => a.time.localeCompare(b.time)).forEach(event => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<strong>${event.time}</strong> — <em>${event.event}</em><br>
+                                    📍 <a href="${event.maps_url}" target="_blank">${event.location}</a><br>
+                                    ✅ Status: ${event.status}<br>
+                                    📎 ${event.ticket}<br>
+                                    📝 ${event.notes}`;
+                    ul.appendChild(li);
+                });
+                section.appendChild(ul);
+                container.appendChild(section);
+            });
+        }
+
+        window.onload = loadCalendar;
+    </script>
+</body>
+</html>
