@@ -37,13 +37,18 @@
             background: #eef;
             padding: 1em;
             border-radius: 5px;
-            transition: background 0.2s;
         }
-        li.clickable {
+        .pdf-button {
+            margin-top: 0.5em;
+            padding: 0.4em 0.8em;
+            background: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
         }
-        li.clickable:hover {
-            background: #ddeeff;
+        .pdf-button:hover {
+            background: #005fa3;
         }
         a {
             color: #0077cc;
@@ -100,16 +105,21 @@
                 const ul = document.createElement("ul");
                 eventsByDate[date].sort((a, b) => a.time.localeCompare(b.time)).forEach(event => {
                     const li = document.createElement("li");
-                    if (event.ticket_url) {
-                        li.classList.add("clickable");
-                        li.onclick = () => window.open(event.ticket_url, "_blank");
-                    }
 
                     li.innerHTML = `<strong>${event.time}</strong> — <em>${event.event}</em><br>
                                     📍 <a href="${event.maps_url}" target="_blank">${event.location}</a><br>
                                     ✅ Status: ${event.status}<br>
                                     📎 ${event.ticket}<br>
-                                    📝 ${event.notes}`;
+                                    📝 ${event.notes || ""}`;
+
+                    if (event.ticket_url) {
+                        const btn = document.createElement("button");
+                        btn.className = "pdf-button";
+                        btn.textContent = "View PDF";
+                        btn.onclick = () => window.open(event.ticket_url, "_blank");
+                        li.appendChild(btn);
+                    }
+
                     ul.appendChild(li);
                 });
                 section.appendChild(ul);
