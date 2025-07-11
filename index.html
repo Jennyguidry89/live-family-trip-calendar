@@ -75,14 +75,16 @@
                 const [date, time, event, location, status, ticketRaw, notes] = row;
                 const parsedDate = new Date(date);
                 parsedDate.setFullYear(2025);
-                const dateKey = parsedDate.toLocaleDateString(undefined, {
+                const dateObj = new Date(date);
+                dateObj.setFullYear(2025);
+                const dateKey = dateObj.toLocaleDateString(undefined, {
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                 });
 
                 const eventKey = event ? event.replace(/"/g, "").trim().toLowerCase() : "";
 
                 if (!eventsByDate[dateKey]) eventsByDate[dateKey] = [];
-                eventsByDate[dateKey].push({
+                eventsByDate[dateKey].push({ fullDate: dateObj,
                     time,
                     event,
                     location,
@@ -96,7 +98,9 @@
             const container = document.getElementById("calendar");
             container.innerHTML = "";
 
-            Object.keys(eventsByDate).sort().forEach(date => {
+            Object.entries(eventsByDate)
+                  .sort((a, b) => new Date(a[1][0].fullDate) - new Date(b[1][0].fullDate))
+                  .forEach(([date, events]) => {
                 const section = document.createElement("div");
                 section.className = "day-section";
                 const header = document.createElement("h2");
