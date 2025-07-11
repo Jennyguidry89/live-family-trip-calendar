@@ -55,7 +55,7 @@
     <h1>Family Trip Calendar</h1>
     <div id="calendar">Loading...</div>
     <script>
-        const driveLinks = Object.fromEntries(Object.entries({"Arlington": "https://drive.google.com/file/d/1Xu8lXGMsYgZoRKN0290A5ZKgrporvT7l/view", "Library": "https://drive.google.com/file/d/1VcoqDb9aEAedHOBrk_o5Qdre53eVukdh/view", "Hotel": "https://drive.google.com/file/d/1Bo6nmono8_Ua10O1PutfHmKwnPJc-38-/view", "Flight": "https://drive.google.com/file/d/15TZYdAC3CIeUuIglXePyecUE8Y3P4acv/view"}).map(([k, v]) => [k.toLowerCase(), v]));
+        const driveLinks = Object.fromEntries(Object.entries({"Arlington": "https://drive.google.com/file/d/1Xu8lXGMsYgZoRKN0290A5ZKgrporvT7l/preview", "Library": "https://drive.google.com/file/d/1VcoqDb9aEAedHOBrk_o5Qdre53eVukdh/preview", "Hotel": "https://drive.google.com/file/d/1Bo6nmono8_Ua10O1PutfHmKwnPJc-38-/preview", "Flight": "https://drive.google.com/file/d/15TZYdAC3CIeUuIglXePyecUE8Y3P4acv/preview"}).map(([k, v]) => [k.toLowerCase(), v]));
 
         async function loadCalendar() {
             const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vTETf5k2la3dvSl0-bZZKsDram5o134CJ2WTph458fcmOpI5FZn7zP_wwTP3PlGng/pub?output=csv");
